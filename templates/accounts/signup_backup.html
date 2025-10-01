@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackversity - Sign Up</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* Hide scrollbars globally while maintaining functionality */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+
+        /* Hide scrollbars for WebKit browsers (Chrome, Safari, Edge) */
+        *::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Additional body scrollbar hiding */
+        html, body {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-behavior: smooth; /* Enable smooth scrolling */
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a0a0a 30%, #2d1212 70%, #1a0a0a 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+            overflow: auto; /* Allow scrolling but hide scrollbars */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Background Effects */
+        .bg-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(rgba(221, 3, 3, 0.4) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(221, 3, 3, 0.4) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: grid-move 20s linear infinite;
+        }
+
+        @keyframes grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #DD0303;
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+            box-shadow: 0 0 15px rgba(221, 3, 3, 0.6);
+        }
+
+        .floating-element:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+        .floating-element:nth-child(2) { top: 50%; left: 80%; animation-delay: 2s; }
+        .floating-element:nth-child(3) { top: 80%; left: 20%; animation-delay: 4s; }
+        .floating-element:nth-child(4) { top: 30%; left: 60%; animation-delay: 1s; }
+        .floating-element:nth-child(5) { top: 70%; left: 90%; animation-delay: 3s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); opacity: 0.7; }
+            50% { transform: translateY(-20px); opacity: 1; }
+        }
+
+        /* Main Container */
+        .auth-container {
+            background: rgba(12, 12, 12, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(221, 3, 3, 0.3);
+            box-shadow: 0 0 50px rgba(221, 3, 3, 0.2);
+            width: 100%;
+            max-width: 900px;
+            min-height: 600px;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+            margin: 2rem;
+        }
+
+        /* Left Side - Branding */
+        .brand-side {
+            flex: 1;
+            background: linear-gradient(135deg, #DD0303 0%, #DD0303 50%, #DD0303 100%);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: brand-shine 4s infinite;
+        }
+
+        @keyframes brand-shine {
+            0% { left: -50%; }
+            100% { left: 50%; }
+        }
+
+        .brand-logo {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .brand-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .brand-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .brand-features {
+            list-style: none;
+            text-align: left;
+        }
+
+        .brand-features li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .brand-features li::before {
+            content: '✓';
+            margin-right: 1rem;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* Right Side - Forms */
+        .form-side {
+            flex: 1;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffffff, #DD0303);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-subtitle {
+            color: #9ca3af;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(12, 12, 12, 0.6) !important;
+            border: 1px solid rgba(221, 3, 3, 0.3) !important;
+            border-radius: 12px !important;
+            color: white !important;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #DD0303 !important;
+            box-shadow: 0 0 0 3px rgba(221, 3, 3, 0.2) !important;
+            background: rgba(12, 12, 12, 0.6) !important;
+            color: white !important;
+        }
+
+        .form-control::placeholder {
+            color: #6b7280 !important;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(12, 12, 12, 0.6);
+            border: 1px solid rgba(221, 3, 3, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #DD0303;
+            box-shadow: 0 0 0 3px rgba(221, 3, 3, 0.2);
+        }
+
+        .form-input::placeholder {
+            color: #6b7280;
+        }
+
+        .form-button {
+            width: 100%;
+            background: linear-gradient(135deg, #DD0303, #DD0303);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            box-shadow: 0 0 25px rgba(221, 3, 3, 0.4);
+        }
+
+        .form-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(221, 3, 3, 0.6);
+            background: linear-gradient(135deg, #DD0303, #DD0303);
+        }
+
+        .form-button:active {
+            transform: translateY(0);
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        .form-footer a {
+            color: #DD0303;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .errorlist {
+            color: #DD0303;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            list-style: none;
+        }
+
+        .errorlist li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .auth-container {
+                flex-direction: column;
+                margin: 1rem;
+                min-height: auto;
+            }
+
+            .brand-side {
+                padding: 2rem;
+                min-height: 300px;
+            }
+
+            .form-side {
+                padding: 2rem;
+            }
+
+            .brand-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="floating-elements">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+    </div>
+
+    <div class="auth-container">
+        <!-- Left Side - Branding -->
+        <div class="brand-side">
+            <div class="brand-logo">
+                <img src="/static/images/hackversity-logo.png" alt="Hackversity Logo" style="width: 60px; height: 60px; object-fit: contain;">
+            </div>
+            <h1 class="brand-title">Hackversity</h1>
+            <p class="brand-subtitle">A University For Ethical Hackers</p>
+            <ul class="brand-features">
+                <li>Advanced Cybersecurity Training</li>
+                <li>Ethical Hacking Certification</li>
+                <li>Bug Bounty Workshops</li>
+                <li>Real-world Practice Labs</li>
+                <li>Expert Mentorship</li>
+            </ul>
+        </div>
+
+        <!-- Right Side - Forms -->
+        <div class="form-side">
+            <div class="form-container">
+                <h2 class="form-title">Create Account</h2>
+                <p class="form-subtitle">Join Hackversity and start your cybersecurity journey</p>
+
+                {% if form.errors %}
+                    <ul class="errorlist">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.username.label_tag }}</label>
+                        {{ form.username }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.email.label_tag }}</label>
+                        {{ form.email }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.password1.label_tag }}</label>
+                        {{ form.password1 }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.password2.label_tag }}</label>
+                        {{ form.password2 }}
+                    </div>
+
+                    <button type="submit" class="form-button">Create Account</button>
+                </form>
+
+                <div class="form-footer">
+                    <p>Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Input focus effects
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('focused');
+            });
+        });
+
+        // Form submission handling
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const button = this.querySelector('.form-button');
+            const originalText = button.textContent;
+            
+            // Show loading state
+            button.textContent = 'Creating Account...';
+            button.disabled = true;
+            button.style.opacity = '0.7';
+        });
+    </script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - Hackversity{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>Welcome Back</h1>
+            <p>Sign in to your Hackversity account</p>
+        </div>
+
+        {% if form.errors %}
+            <div class="error-messages">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <p>{% if field != '__all__' %}{{ field|title }}: {% endif %}{{ error }}</p>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Username</label>
+                <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter your username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password">Password</label>
+                <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" class="btn-primary auth-submit">Sign In</button>
+        </form>
+
+        <div class="auth-links">
+            <p>Don't have an account? <a href="/accounts/signup/">Sign up here</a></p>
+            <p><a href="/">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-page {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.auth-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 450px;
+    border: 1px solid rgba(221, 3, 3, 0.1);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+    color: #DD0303;
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.auth-header p {
+    color: #666;
+    margin: 0;
+}
+
+.auth-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.auth-form .form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e1e1e1;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    background: white;
+}
+
+.auth-form .form-control:focus {
+    outline: none;
+    border-color: #DD0303;
+    box-shadow: 0 0 0 3px rgba(221, 3, 3, 0.1);
+}
+
+.auth-submit {
+    width: 100%;
+    padding: 0.875rem;
+    background: linear-gradient(135deg, #DD0303 0%, #AA0202 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.auth-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(221, 3, 3, 0.3);
+}
+
+.auth-links {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e1e1e1;
+}
+
+.auth-links a {
+    color: #DD0303;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+}
+
+.error-messages {
+    background: rgba(255, 235, 238, 0.9);
+    border: 1px solid #ffcdd2;
+    color: #c62828;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 2rem;
+        margin: 1rem;
+    }
+}
+</style>
+{% endblock %}

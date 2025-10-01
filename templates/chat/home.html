@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hackversity - Digital Fortress{% endblock %}
+
+
+
+{% block content %}
+{% if not active_conversation and not force_chat %}
+    <!-- Landing Page - Exact Hackversity Main Page -->
+    <div class="hero-section">
+        <h1 class="hero-title typing-effect" id="typingTitle">
+            <span class="typing-text">Unlock Your Digital Fortress</span>
+            <span class="typing-cursor">|</span>
+        </h1>
+        <p class="hero-subtitle">
+            Advanced cybersecurity solutions that adapt and evolve with emerging threats. 
+            Your digital assets deserve military-grade protection.
+        </p>
+        
+        <div class="search-container" id="searchContainer">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    placeholder="Ask about cybersecurity, ethical hacking, or bug bounty..." 
+                    id="searchInput"
+                />
+                <button class="search-submit" type="submit" id="searchSubmit">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                    Ask
+                </button>
+            </div>
+        </div>
+        
+        
+    </div>
+{% else %}
+    <!-- Chat Interface -->
+    <div class="chat-container">
+        <div class="row g-0 h-100">
+            <!-- Sidebar -->
+            <div class="col-md-3 sidebar">
+                <div class="sidebar-header">
+                    <button class="new-chat-btn" onclick="startNewConversation()">
+                        <i class="fas fa-plus"></i>
+                        <span>New Chat</span>
+                    </button>
+                </div>
+                
+                <div class="conversation-list">
+                    {% for conversation in conversations %}
+                        <div class="conversation-item {% if conversation.id == active_conversation.id %}active{% endif %}" 
+                             data-conversation-id="{{ conversation.id }}">
+                            <div class="conversation-title">
+                                {{ conversation.title|default:"New Conversation" }}
+                            </div>
+                            <div class="conversation-date">
+                                {{ conversation.updated_at|date:"M d, Y" }}
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" 
+                                    data-conversation-id="{{ conversation.id }}" 
+                                    title="Delete conversation">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    {% empty %}
+                        <div class="p-3 text-muted text-center">
+                            No conversations yet.<br>
+                            Start a new chat!
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Chat Area -->
+            <div class="col-md-9 d-flex flex-column chat-area">
+                <!-- Messages -->
+                <div class="messages-container flex-grow-1" id="messagesContainer">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="message {{ message.is_from_user|yesno:'user,ai' }}">
+                                <div class="message-avatar">
+                                    {% if message.is_from_user %}
+                                        <i class="fas fa-user-ninja"></i>
+                                    {% else %}
+                                        <i class="fas fa-shield-alt"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="message-content">
+                                    <div class="message-text">{{ message.content|linebreaks }}</div>
+                                    <div class="message-time">{{ message.created_at|date:"H:i" }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="welcome-message">
+                            <div class="welcome-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3>Welcome to Hackversity Chat</h3>
+                            <p>Start a conversation about cybersecurity, ethical hacking, or AI security. Ask me anything!</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Input Area -->
+                <div class="input-area">
+                    <form id="chatForm">
+                        {% csrf_token %}
+                        <input type="hidden" id="conversationId" value="{{ active_conversation.id|default:'' }}">
+                        <div class="input-container">
+                            <textarea 
+                               id="messageInput" 
+                               placeholder="Ask about cybersecurity, ethical hacking, or AI security..."
+                               autocomplete="off"
+                               rows="1"></textarea>
+                            <button type="submit" id="sendButton">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Loading Modal -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<script>
+    // Search functionality for welcome screen
+    const searchContainer = document.getElementById('searchContainer');
+    const searchInput = document.getElementById('searchInput');
+    const searchSubmit = document.getElementById('searchSubmit');
+
+    if (searchInput && searchContainer) {
+        searchInput.addEventListener('focus', () => {
+            searchContainer.classList.add('focused');
+        });
+
+        searchInput.addEventListener('blur', () => {
+            searchContainer.classList.remove('focused');
+        });
+
+        // Handle search submission
+        function handleSearch() {
+            const query = searchInput.value.trim();
+            if (query) {
+                // Start new conversation with the search query
+                startNewConversationWithMessage(query);
+            }
+        }
+
+        searchSubmit.addEventListener('click', handleSearch);
+        
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+        });
+    }
+
+    // Function to start new conversation with initial message
+    function startNewConversationWithMessage(message) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token }}';
+        
+        fetch('{% url "chat:new_conversation" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                'initial_message': message
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '{% url "chat:home" %}?conversation=' + data.conversation_id;
+            } else {
+                console.error('Failed to create conversation:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/chat.js' %}"></script>
+<script>
+// Typing Effect for Hero Title - Fixed Version
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM loaded, initializing typing effect...');
+    
+    // Wait a bit for all elements to be ready
+    setTimeout(() => {
+        const typingText = document.querySelector('.typing-text');
+        const cursor = document.querySelector('.typing-cursor');
+        
+        console.log('📍 Typing text element:', typingText);
+        console.log('📍 Cursor element:', cursor);
+        
+        if (typingText) {
+            const texts = [
+                'Unlock Your Digital Fortress',
+                'Secure Your Cyber Future', 
+                'Master Ethical Hacking',
+                'Hunt for Bug Bounties',
+                'Defend Against Threats',
+                'Build Cyber Resilience',
+                'Penetrate. Test. Secure.'
+            ];
+            
+            let textIndex = 0;
+            let charIndex = 0;
+            let isDeleting = false;
+            
+            function typeEffect() {
+                const currentText = texts[textIndex];
+                
+                if (!isDeleting && charIndex < currentText.length) {
+                    // Typing
+                    typingText.textContent = currentText.substring(0, charIndex + 1);
+                    charIndex++;
+                    setTimeout(typeEffect, 100); // Typing speed
+                } else if (isDeleting && charIndex > 0) {
+                    // Deleting
+                    typingText.textContent = currentText.substring(0, charIndex - 1);
+                    charIndex--;
+                    setTimeout(typeEffect, 50); // Deleting speed
+                } else if (!isDeleting && charIndex === currentText.length) {
+                    // Pause before deleting
+                    setTimeout(() => {
+                        isDeleting = true;
+                        typeEffect();
+                    }, 2000); // Pause duration
+                } else if (isDeleting && charIndex === 0) {
+                    // Move to next text
+                    isDeleting = false;
+                    textIndex = (textIndex + 1) % texts.length;
+                    setTimeout(typeEffect, 500); // Pause before next text
+                }
+            }
+            
+            // Start the typing effect immediately
+            console.log('✨ Starting typing effect...');
+            typeEffect();
+            
+            // Cursor color animation
+            if (cursor) {
+                console.log('🎨 Starting cursor animation...');
+                let colorIndex = 0;
+                const colors = ['#00ff41', '#ff0080', '#0099ff', '#ffff00', '#ff4000'];
+                
+                setInterval(() => {
+                    const color = colors[colorIndex % colors.length];
+                    cursor.style.color = color;
+                    cursor.style.textShadow = `0 0 20px ${color}80`;
+                    colorIndex++;
+                }, 2000);
+            }
+        } else {
+            console.error('❌ Typing text element not found! Check HTML structure.');
+            // Fallback: Just set static text
+            const heroTitle = document.querySelector('.hero-title');
+            if (heroTitle) {
+                heroTitle.innerHTML = 'Unlock Your Digital Fortress <span style="color: #00ff41; animation: blink 1s infinite;">|</span>';
+            }
+        }
+    }, 100); // Small delay to ensure DOM is fully ready
+});
+</script>
+{% endblock %}
