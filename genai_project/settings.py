@@ -109,12 +109,17 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 def test_database_connection(db_config):
     """Test if database connection works"""
     try:
-        # Check if all required fields are present
-        required_fields = ['HOST', 'PORT', 'USER', 'PASSWORD', 'NAME']
+        # Check if all required fields are present (PORT is optional, defaults to 5432)
+        required_fields = ['HOST', 'USER', 'PASSWORD', 'NAME']
         for field in required_fields:
             if not db_config.get(field):
                 print(f"Database connection test failed: Missing {field}")
                 return False
+        
+        # Set default port if missing
+        if not db_config.get('PORT'):
+            db_config['PORT'] = 5432
+            print("Database connection test: Using default PORT 5432")
         
         import psycopg2
         if 'postgresql' in db_config.get('ENGINE', ''):
@@ -141,9 +146,19 @@ if DATABASE_URL:
     try:
         # Production database (PostgreSQL)
         print(f"Parsing DATABASE_URL...")
+        
+        # Show URL format (without sensitive data) for debugging
+        url_parts = DATABASE_URL.split('@')
+        if len(url_parts) > 1:
+            host_part = url_parts[1]  # Everything after @
+            print(f"Database URL host part: {host_part}")
+        
         db_config = dj_database_url.parse(DATABASE_URL)
         print(f"Parsed database config - Engine: {db_config.get('ENGINE', 'Unknown')}")
-        print(f"Host: {db_config.get('HOST', 'Not set')}, Port: {db_config.get('PORT', 'Not set')}")
+        print(f"Host: {db_config.get('HOST', 'Not set')}")
+        print(f"Port: {db_config.get('PORT', 'Not set')} (will default to 5432 if missing)")
+        print(f"Database Name: {db_config.get('NAME', 'Not set')}")
+        print(f"User: {db_config.get('USER', 'Not set')}")
         
         # Test connection before using PostgreSQL
         if test_database_connection(db_config):

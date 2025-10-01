@@ -19,7 +19,20 @@ def health_check(request):
 @require_http_methods(["GET"])
 def simple_home(request):
     """Simple home page that doesn't require authentication or database"""
-    html = """
+    
+    # Get database status
+    from django.conf import settings
+    db_engine = settings.DATABASES['default']['ENGINE']
+    database_url_set = bool(os.getenv('DATABASE_URL'))
+    
+    if 'postgresql' in db_engine:
+        db_status = "🗄️ Database: PostgreSQL (Production)"
+        db_class = "status"
+    else:
+        db_status = "🗄️ Database: SQLite (Fallback)"
+        db_class = "status warning"
+    
+    html = f"""
     <!DOCTYPE html>
     <html>
     <head>
@@ -79,6 +92,11 @@ def simple_home(request):
             
             <p>Welcome to the Hackversity AI chat application. This Django app provides AI-powered conversations using the Euron API.</p>
             
+            <div class="{db_class}">
+                {db_status}
+            </div>
+            {('<div class="status warning">⚠️ Data will not persist between deployments. Set DATABASE_URL for PostgreSQL.</div>' if 'sqlite' in db_engine else '')}
+            
             <div style="margin: 30px 0;">
                 <a href="/accounts/login/" class="btn">Login</a>
                 <a href="/accounts/signup/" class="btn">Sign Up</a>
@@ -108,10 +126,59 @@ def simple_home(request):
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
+def emergency_login(request):
+    """Emergency login view that doesn't require templates"""
+    if request.method == 'POST':
+        from django.contrib.auth import authenticate, login
+        from django.http import JsonResponse
+        
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        if username and password:
+            user = authenticate(username=username, password=password)
+            if user:
+                login(request, user)
+                return JsonResponse({'success': True, 'message': 'Login successful'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Invalid credentials'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Username and password required'})
+    
+    # GET request - show simple login form
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Emergency Login</title>
+        <style>
+            body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; }
+            input { width: 100%; padding: 10px; margin: 5px 0; }
+            button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; }
+        </style>
+    </head>
+    <body>
+        <h2>Emergency Login</h2>
+        <form method="post">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <p><a href="/simple/">← Back to Home</a></p>
+    </body>
+    </html>
+    """
+    return HttpResponse(html)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
 def database_status(request):
     """Check database status and provide debugging info"""
     from django.db import connection
     from django.conf import settings
+    import os
+    from pathlib import Path
     
     status = {
         'database_url_set': bool(os.getenv('DATABASE_URL')),
@@ -121,6 +188,32 @@ def database_status(request):
         'error': None,
     }
     
+    # Add template debugging info
+    base_dir = Path(settings.BASE_DIR)
+    templates_dir = base_dir / 'templates'
+    
+    template_status = {
+        'templates_dir_exists': templates_dir.exists(),
+        'template_files': {},
+    }
+    
+    # Check critical templates
+    critical_templates = [
+        'registration/login.html',
+        'accounts/signup.html',
+        'base.html'
+    ]
+    
+    for template in critical_templates:
+        template_path = templates_dir / template
+        template_status['template_files'][template] = {
+            'exists': template_path.exists(),
+            'size': template_path.stat().st_size if template_path.exists() else 0
+        }
+    
+    status['templates'] = template_status
+    
+    # Database connection test
     try:
         connection.ensure_connection()
         status['connection_test'] = True

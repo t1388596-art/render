@@ -18,7 +18,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
-from chat.emergency_views import health_check, simple_home, database_status
+from chat.emergency_views import health_check, simple_home, database_status, emergency_login
 
 # Try to import custom login view, fallback to default if there are issues
 try:
@@ -33,12 +33,14 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
     path('db-status/', database_status, name='database_status'),
     path('simple/', simple_home, name='simple_home'),
+    path('emergency-login/', emergency_login, name='emergency_login'),
     
     # Admin and authentication
     path('admin/', admin.site.urls),
     path('accounts/login/', CustomLoginView.as_view(), name='login'),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('auth/', include('accounts.urls')),
+    path('accounts/', include('accounts.urls')),  # For signup and profile
+    path('auth/', include('accounts.urls', namespace='auth')),  # Backward compatibility with namespace
     
     # Main application
     path('chat/', include('chat.urls')),
