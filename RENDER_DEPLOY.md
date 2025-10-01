@@ -93,16 +93,41 @@ python manage.py migrate
 - Check that database and web service are in same region
 - Try restarting the web service after database is fully ready
 
-**"could not translate host name" Error:**
-1. Go to your PostgreSQL database in Render dashboard
-2. Copy the **Internal Database URL** (looks like: `postgresql://user:pass@dpg-xxx-a.oregon-postgres.render.com/dbname`)
-3. Replace the DATABASE_URL environment variable in your web service
-4. Restart the web service
+**"could not translate host name" Error (CRITICAL FIX):**
+
+This error means your web service can't reach the PostgreSQL database. Here's the exact fix:
+
+1. **Go to your PostgreSQL database in Render dashboard**
+2. **Click on your database service**
+3. **In the "Connections" section, find "Internal Database URL"** (NOT External!)
+4. **Copy the Internal Database URL** - it should look like:
+   ```
+   postgresql://user:password@dpg-xxxx-a:5432/database_name
+   ```
+5. **Go to your web service settings**
+6. **Find the "Environment" tab**
+7. **Edit the `DATABASE_URL` variable**
+8. **Replace it with the Internal Database URL**
+9. **Save and restart your web service**
+
+**Why this happens:**
+- External Database URL uses public hostnames that aren't accessible from within Render's network
+- Internal Database URL uses private network hostnames that work between services
+- The hostname `dpg-d3eluumr433s73eqad20-a` suggests you're using External URL
+
+**Alternative Quick Fix:**
+If the above doesn't work, your app will automatically fall back to SQLite (as shown in logs), which will work but won't persist data between deployments.
 
 **Emergency URLs for Testing:**
 - `/health/` - Basic health check (no database required)
 - `/simple/` - Simple home page (no database required)  
 - `/db-status/` - Database connection status
+
+**Template missing errors (TemplateDoesNotExist)?**
+- Check that all template files are properly committed to git
+- Verify template directory structure: `templates/registration/login.html`
+- Ensure templates are collected during build process
+- Template files must be in the repository, not just locally
 
 **Static files missing?**
 - Ensure `collectstatic` runs in build process
