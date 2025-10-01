@@ -26,7 +26,7 @@ git push origin main
 3. Connect your GitHub repository
 4. Use these settings:
    - **Build Command**: `./build.sh`
-   - **Start Command**: `gunicorn genai_project.wsgi:application`
+   - **Start Command**: `./start.sh`
 
 ### 3. Set Environment Variables
 Add these in Render dashboard:
@@ -40,9 +40,12 @@ Add these in Render dashboard:
 - `DJANGO_LOG_LEVEL`: `INFO`
 
 ### 4. Add PostgreSQL Database
-1. Create new PostgreSQL database in Render
-2. Copy the "External Database URL"
-3. Add as `DATABASE_URL` environment variable to your web service
+1. Create new PostgreSQL database in Render **FIRST**
+2. Wait for database to be fully provisioned (this can take a few minutes)
+3. Copy the "External Database URL" (Internal URL also works)
+4. Add as `DATABASE_URL` environment variable to your web service
+
+**⚠️ Important:** Create the database BEFORE deploying the web service, or the first deployment may fail due to database unavailability.
 
 ### 5. Deploy! 🎉
 Your app will be available at: `https://your-service-name.onrender.com`
@@ -67,14 +70,26 @@ python manage.py migrate
 
 ## 🐛 Troubleshooting
 
+**Build fails with database connection error?**
+- This is normal! Database may not be accessible during build
+- The build script now handles this gracefully
+- Migrations will run during startup instead
+
 **Build fails?**
-- Check `build.sh` has execute permissions
+- Check `build.sh` and `start.sh` have execute permissions
 - Verify all dependencies in `requirements.txt`
+- Check that both database and web service are created
 
 **App won't start?**
 - Check environment variables are set
 - Verify `DATABASE_URL` is configured
-- Check Render logs for errors
+- Ensure database is running and accessible
+- Check Render logs for detailed error messages
+
+**Database connection issues?**
+- Wait a few minutes for database to fully initialize
+- Verify the DATABASE_URL environment variable
+- Check that database and web service are in same region
 
 **Static files missing?**
 - Ensure `collectstatic` runs in build process

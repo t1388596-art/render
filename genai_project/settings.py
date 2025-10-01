@@ -110,6 +110,15 @@ if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.parse(DATABASE_URL)
     }
+    # Add connection pooling and retry logic for production
+    DATABASES['default'].update({
+        'CONN_MAX_AGE': 600,
+        'CONN_HEALTH_CHECKS': True,
+        'OPTIONS': {
+            'connect_timeout': 10,
+            'options': '-c default_transaction_isolation=serializable'
+        }
+    })
 else:
     # Development database (SQLite)
     DATABASES = {
