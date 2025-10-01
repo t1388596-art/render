@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites',
+    # 'django.contrib.sites',  # Removed to avoid database dependency issues
     
     # Third party apps (optional)
     'rest_framework',
@@ -105,22 +105,70 @@ WSGI_APPLICATION = 'genai_project.wsgi.application'
 # Use PostgreSQL for production (Render.com provides DATABASE_URL)
 DATABASE_URL = os.getenv('DATABASE_URL')
 
+# Test database connectivity and fallback to SQLite if PostgreSQL fails
+def test_database_connection(db_config):
+    """Test if database connection works"""
+    try:
+        import psycopg2
+        if 'postgresql' in db_config.get('ENGINE', 'django.db.backends.postgresql'):
+            conn = psycopg2.connect(
+                host=db_config.get('HOST', 'dpg-d3eluumr433s73eqad20-a'),
+                port=db_config.get('PORT', 5432),
+                user=db_config.get('USER', 'hackversity_ai_user'),
+                password=db_config.get('PASSWORD', 'DsNjvbIgN6sSTT6IUDhQGyPqTMV1tKID'),
+                dbname=db_config.get('NAME', 'hackversity_ai_ovc6'),
+                connect_timeout=5
+            )
+            conn.close()
+            return True
+    except Exception as e:
+        print(f"Database connection test failed: {e}")
+        return False
+    return True
+
 if DATABASE_URL:
-    # Production database (PostgreSQL)
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
-    }
-    # Add connection pooling and retry logic for production
-    DATABASES['default'].update({
-        'CONN_MAX_AGE': 600,
-        'CONN_HEALTH_CHECKS': True,
-        'OPTIONS': {
-            'connect_timeout': 10,
-            'options': '-c default_transaction_isolation=serializable'
+    try:
+        # Production database (PostgreSQL)
+        db_config = dj_database_url.parse(DATABASE_URL)
+        
+        # Test connection before using PostgreSQL
+        if test_database_connection(db_config):
+            DATABASES = {
+                'default': db_config
+            }
+            # Add connection pooling and retry logic for production
+            DATABASES['default'].update({
+                'CONN_MAX_AGE': 60,  # Reduced from 600 for better connection cycling
+                'CONN_HEALTH_CHECKS': True,
+                'OPTIONS': {
+                    'connect_timeout': 10,
+                    'keepalives_idle': 600,
+                    'keepalives_interval': 30,
+                    'keepalives_count': 3,
+                }
+            })
+            print("Using PostgreSQL database")
+        else:
+            # Fallback to SQLite if PostgreSQL connection fails
+            print("PostgreSQL connection failed, falling back to SQLite")
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.sqlite3',
+                    'NAME': BASE_DIR / 'db.sqlite3',
+                }
+            }
+    except Exception as e:
+        print(f"Error parsing DATABASE_URL: {e}")
+        print("Falling back to SQLite database")
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
         }
-    })
 else:
     # Development database (SQLite)
+    print("DATABASE_URL not set, using SQLite")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -200,8 +248,8 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Django Allauth Configuration
-SITE_ID = 1
+# Django Authentication Configuration
+# SITE_ID = 1  # Removed since we're not using django.contrib.sites
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
