@@ -20,13 +20,12 @@ from django.conf.urls.static import static
 from django.views.generic import RedirectView
 from chat.emergency_views import health_check, simple_home, database_status, emergency_login
 
-# Try to import custom login view, fallback to default if there are issues
+# Import production-safe views
 try:
-    from accounts.views import CustomLoginView
-    custom_login_available = True
+    from accounts.views import custom_login_view
 except ImportError:
-    from django.contrib.auth.views import LoginView as CustomLoginView
-    custom_login_available = False
+    def custom_login_view(request):
+        return HttpResponse("Login temporarily unavailable")
 
 urlpatterns = [
     # Emergency/debugging endpoints (no database required)
@@ -37,7 +36,7 @@ urlpatterns = [
     
     # Admin and authentication
     path('admin/', admin.site.urls),
-    path('accounts/login/', CustomLoginView.as_view(), name='login'),
+    path('accounts/login/', custom_login_view, name='login'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/', include('accounts.urls')),  # For signup and profile
     path('auth/', include('accounts.urls', namespace='auth')),  # Backward compatibility with namespace
