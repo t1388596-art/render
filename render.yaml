@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: hackversity-ai
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn genai_project.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: DJANGO_LOG_LEVEL
+        value: "INFO"
+      - key: EURON_API_KEY
+        sync: false  # Set this manually in Render dashboard
+
+databases:
+  - name: hackversity-ai-db
+    databaseName: hackversity_ai
+    user: hackversity_ai_user
