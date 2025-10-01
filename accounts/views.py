@@ -257,45 +257,45 @@ class CustomLoginView(LoginView):
 
 
 def custom_signup_view(request):
-    """Production-safe signup view with template fallback"""
-    from django.contrib.auth.models import User
+    """Production-safe signup view with proper form handling"""
+    from django.contrib.auth import get_user_model
     
     if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
-        email = request.POST.get('email', '').strip()
-        password1 = request.POST.get('password1', '')
-        password2 = request.POST.get('password2', '')
-        
-        error_message = ""
-        if not username:
-            error_message = "Username is required"
-        elif not email:
-            error_message = "Email is required"
-        elif not password1:
-            error_message = "Password is required"
-        elif password1 != password2:
-            error_message = "Passwords do not match"
-        elif len(password1) < 8:
-            error_message = "Password must be at least 8 characters long"
-        elif User.objects.filter(username=username).exists():
-            error_message = "Username already exists"
-        elif User.objects.filter(email=email).exists():
-            error_message = "Email already registered"
-        else:
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
             try:
-                user = User.objects.create_user(username=username, email=email, password=password1)
+                user = form.save()
                 login(request, user)
                 return redirect('/chat/')
             except Exception as e:
-                error_message = f"Registration failed: {str(e)}"
+                form.add_error(None, f"Registration failed: {str(e)}")
     else:
-        error_message = ""
+        form = CustomUserCreationForm()
     
-    # Try to render template, fallback to inline HTML if not found
+    # Try to render template with form, fallback to inline HTML if not found
     try:
-        return render(request, 'accounts/signup.html', {'error_message': error_message})
+        return render(request, 'accounts/signup.html', {'form': form})
     except:
-        # Fallback to inline template
+        # Fallback to inline template with proper form handling
+        csrf_token = request.META.get('CSRF_COOKIE', '')
+        if hasattr(request, 'META') and 'HTTP_X_CSRFTOKEN' in request.META:
+            csrf_token = request.META['HTTP_X_CSRFTOKEN']
+        
+        # Get form errors
+        error_html = ""
+        if form.errors:
+            error_html = '<div class="error-messages">'
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_html += f'<p>{error}</p>'
+            error_html += '</div>'
+        
+        # Get form field values
+        username_value = form.data.get('username', '') if form.data else ''
+        email_value = form.data.get('email', '') if form.data else ''
+        first_name_value = form.data.get('first_name', '') if form.data else ''
+        last_name_value = form.data.get('last_name', '') if form.data else ''
+        
         html_content = f'''
 <!DOCTYPE html>
 <html lang="en">
@@ -315,54 +315,74 @@ def custom_signup_view(request):
             box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px;
         }}
         .signup-header {{ text-align: center; margin-bottom: 2rem; }}
-        .signup-header h1 {{ color: #333; margin-bottom: 0.5rem; }}
+        .signup-header h1 {{ color: #333; margin-bottom: 0.5rem; font-size: 2rem; }}
         .form-group {{ margin-bottom: 1rem; }}
+        .form-row {{ display: flex; gap: 1rem; }}
+        .form-row .form-group {{ flex: 1; }}
         label {{ display: block; margin-bottom: 0.5rem; color: #333; font-weight: 500; }}
         input[type="text"], input[type="email"], input[type="password"] {{
             width: 100%; padding: 0.75rem; border: 2px solid #e1e1e1;
             border-radius: 5px; font-size: 1rem; box-sizing: border-box;
+            transition: border-color 0.3s;
+        }}
+        input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {{
+            outline: none; border-color: #667eea;
         }}
         .btn-primary {{
             width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white; border: none; border-radius: 5px; font-size: 1rem; cursor: pointer;
+            transition: transform 0.2s; margin-top: 0.5rem;
         }}
+        .btn-primary:hover {{ transform: translateY(-2px); }}
         .signup-links {{ text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e1e1e1; }}
         .signup-links a {{ color: #667eea; text-decoration: none; }}
+        .signup-links a:hover {{ text-decoration: underline; }}
         .error-messages {{ background: #fee; border: 1px solid #fcc; color: #c33; padding: 1rem; border-radius: 5px; margin-bottom: 1rem; }}
-        .password-help {{ font-size: 0.875rem; color: #666; margin-top: 0.25rem; }}
+        .help-text {{ font-size: 0.875rem; color: #666; margin-top: 0.25rem; }}
+        .required {{ color: #c33; }}
     </style>
 </head>
 <body>
     <div class="signup-container">
         <div class="signup-header">
-            <h1>Create Account</h1>
-            <p>Join GenAI Chat today</p>
+            <h1>Join GenAI Chat</h1>
+            <p>Create your account to get started</p>
         </div>
-        {('<div class="error-messages"><p>' + error_message + '</p></div>') if error_message else ''}
+        {error_html}
         <form method="post">
-            <input type="hidden" name="csrfmiddlewaretoken" value="{request.META.get('CSRF_COOKIE', '')}">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
             <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" name="username" id="username" required>
+                <label for="id_username">Username <span class="required">*</span></label>
+                <input type="text" name="username" id="id_username" value="{username_value}" placeholder="Username" required>
             </div>
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" name="email" id="email" required>
+                <label for="id_email">Email Address <span class="required">*</span></label>
+                <input type="email" name="email" id="id_email" value="{email_value}" placeholder="Email address" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_first_name">First Name</label>
+                    <input type="text" name="first_name" id="id_first_name" value="{first_name_value}" placeholder="First name (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="id_last_name">Last Name</label>
+                    <input type="text" name="last_name" id="id_last_name" value="{last_name_value}" placeholder="Last name (optional)">
+                </div>
             </div>
             <div class="form-group">
-                <label for="password1">Password</label>
-                <input type="password" name="password1" id="password1" required>
-                <div class="password-help">Must be at least 8 characters long</div>
+                <label for="id_password1">Password <span class="required">*</span></label>
+                <input type="password" name="password1" id="id_password1" placeholder="Password" required>
+                <div class="help-text">Your password must contain at least 8 characters.</div>
             </div>
             <div class="form-group">
-                <label for="password2">Confirm Password</label>
-                <input type="password" name="password2" id="password2" required>
+                <label for="id_password2">Confirm Password <span class="required">*</span></label>
+                <input type="password" name="password2" id="id_password2" placeholder="Confirm password" required>
             </div>
             <button type="submit" class="btn-primary">Create Account</button>
         </form>
         <div class="signup-links">
             <p>Already have an account? <a href="/accounts/login/">Sign in here</a></p>
-            <p><a href="/">← Back to Home</a></p>
+            <p><a href="/simple/">← Back to Home</a></p>
         </div>
     </div>
 </body>
