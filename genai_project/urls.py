@@ -18,16 +18,34 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
-from accounts.views import CustomLoginView
+from chat.emergency_views import health_check, simple_home, database_status
+
+# Try to import custom login view, fallback to default if there are issues
+try:
+    from accounts.views import CustomLoginView
+    custom_login_available = True
+except ImportError:
+    from django.contrib.auth.views import LoginView as CustomLoginView
+    custom_login_available = False
 
 urlpatterns = [
+    # Emergency/debugging endpoints (no database required)
+    path('health/', health_check, name='health_check'),
+    path('db-status/', database_status, name='database_status'),
+    path('simple/', simple_home, name='simple_home'),
+    
+    # Admin and authentication
     path('admin/', admin.site.urls),
-    path('accounts/login/', CustomLoginView.as_view(), name='login'),  # Custom login with Bootstrap
-    path('accounts/', include('django.contrib.auth.urls')),  # Other Django built-in auth URLs
+    path('accounts/login/', CustomLoginView.as_view(), name='login'),
+    path('accounts/', include('django.contrib.auth.urls')),
     path('auth/', include('accounts.urls')),
+    
+    # Main application
     path('chat/', include('chat.urls')),
     path('api/', include('chat.api_urls')),
-    path('', RedirectView.as_view(url='/chat/', permanent=False)),
+    
+    # Default redirect - use simple home if database issues
+    path('', simple_home, name='home'),
 ]
 
 if settings.DEBUG:

@@ -87,9 +87,22 @@ python manage.py migrate
 - Check Render logs for detailed error messages
 
 **Database connection issues?**
+- **Most Common Fix**: Use the **Internal Database URL** (not External)
 - Wait a few minutes for database to fully initialize
-- Verify the DATABASE_URL environment variable
+- Verify the DATABASE_URL environment variable is set correctly
 - Check that database and web service are in same region
+- Try restarting the web service after database is fully ready
+
+**"could not translate host name" Error:**
+1. Go to your PostgreSQL database in Render dashboard
+2. Copy the **Internal Database URL** (looks like: `postgresql://user:pass@dpg-xxx-a.oregon-postgres.render.com/dbname`)
+3. Replace the DATABASE_URL environment variable in your web service
+4. Restart the web service
+
+**Emergency URLs for Testing:**
+- `/health/` - Basic health check (no database required)
+- `/simple/` - Simple home page (no database required)  
+- `/db-status/` - Database connection status
 
 **Static files missing?**
 - Ensure `collectstatic` runs in build process
