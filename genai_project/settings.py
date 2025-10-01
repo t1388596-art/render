@@ -36,7 +36,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '.onrender.com',
-    'hackversity-ai.onrender.com',  # Your specific Render URL
+    'hackversity-69bt.onrender.com',  # Your specific Render URL
 ]
 
 # Get allowed hosts from environment variable if provided
@@ -109,18 +109,29 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 def test_database_connection(db_config):
     """Test if database connection works"""
     try:
+        # Check if all required fields are present
+        required_fields = ['HOST', 'PORT', 'USER', 'PASSWORD', 'NAME']
+        for field in required_fields:
+            if not db_config.get(field):
+                print(f"Database connection test failed: Missing {field}")
+                return False
+        
         import psycopg2
-        if 'postgresql' in db_config.get('ENGINE', 'django.db.backends.postgresql'):
+        if 'postgresql' in db_config.get('ENGINE', ''):
             conn = psycopg2.connect(
-                host=db_config.get('HOST', 'dpg-d3eluumr433s73eqad20-a'),
+                host=db_config.get('HOST'),
                 port=db_config.get('PORT', 5432),
-                user=db_config.get('USER', 'hackversity_ai_user'),
-                password=db_config.get('PASSWORD', 'DsNjvbIgN6sSTT6IUDhQGyPqTMV1tKID'),
-                dbname=db_config.get('NAME', 'hackversity_ai_ovc6'),
+                user=db_config.get('USER'),
+                password=db_config.get('PASSWORD'),
+                dbname=db_config.get('NAME'),
                 connect_timeout=5
             )
             conn.close()
+            print(f"Database connection test successful to {db_config.get('HOST')}")
             return True
+    except ImportError:
+        print("Database connection test failed: psycopg2 not available")
+        return False
     except Exception as e:
         print(f"Database connection test failed: {e}")
         return False
@@ -129,7 +140,10 @@ def test_database_connection(db_config):
 if DATABASE_URL:
     try:
         # Production database (PostgreSQL)
+        print(f"Parsing DATABASE_URL...")
         db_config = dj_database_url.parse(DATABASE_URL)
+        print(f"Parsed database config - Engine: {db_config.get('ENGINE', 'Unknown')}")
+        print(f"Host: {db_config.get('HOST', 'Not set')}, Port: {db_config.get('PORT', 'Not set')}")
         
         # Test connection before using PostgreSQL
         if test_database_connection(db_config):
@@ -147,10 +161,11 @@ if DATABASE_URL:
                     'keepalives_count': 3,
                 }
             })
-            print("Using PostgreSQL database")
+            print("✅ Using PostgreSQL database")
         else:
             # Fallback to SQLite if PostgreSQL connection fails
-            print("PostgreSQL connection failed, falling back to SQLite")
+            print("⚠️  PostgreSQL connection failed, falling back to SQLite")
+            print("📝 Note: Data will not persist between deployments with SQLite")
             DATABASES = {
                 'default': {
                     'ENGINE': 'django.db.backends.sqlite3',
@@ -158,8 +173,9 @@ if DATABASE_URL:
                 }
             }
     except Exception as e:
-        print(f"Error parsing DATABASE_URL: {e}")
-        print("Falling back to SQLite database")
+        print(f"❌ Error parsing DATABASE_URL: {e}")
+        print("⚠️  Falling back to SQLite database")
+        print("💡 Check that DATABASE_URL is properly formatted")
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
@@ -168,7 +184,7 @@ if DATABASE_URL:
         }
 else:
     # Development database (SQLite)
-    print("DATABASE_URL not set, using SQLite")
+    print("📝 DATABASE_URL not set, using SQLite for development")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
