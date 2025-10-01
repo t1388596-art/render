@@ -147,13 +147,45 @@ if DATABASE_URL:
         # Production database (PostgreSQL)
         print(f"Parsing DATABASE_URL...")
         
+        # Convert external Render URL to internal URL for better connectivity
+        internal_database_url = DATABASE_URL
+        if 'dpg-' in DATABASE_URL and '@dpg-' in DATABASE_URL:
+            # Extract the service ID and convert to internal format
+            # External: postgres://user:pass@dpg-xxxxx-a/database
+            # Internal: postgres://user:pass@dpg-xxxxx-a.oregon-postgres.render.com/database
+            print("🔄 Converting external Render URL to internal URL...")
+            parts = DATABASE_URL.split('@')
+            if len(parts) >= 2:
+                before_at = parts[0]  # postgres://user:pass
+                after_at = parts[1]   # dpg-xxxxx-a/database
+                
+                # Check if it's already internal format
+                if '.render.com' not in after_at:
+                    # Split the host and database parts
+                    host_db_parts = after_at.split('/')
+                    if len(host_db_parts) >= 2:
+                        external_host = host_db_parts[0]  # dpg-xxxxx-a
+                        database_path = '/'.join(host_db_parts[1:])  # database name and any additional path
+                        
+                        # Convert to internal hostname
+                        internal_host = f"{external_host}.oregon-postgres.render.com"
+                        internal_database_url = f"{before_at}@{internal_host}/{database_path}"
+                        
+                        print(f"📝 External host: {external_host}")
+                        print(f"🔗 Internal host: {internal_host}")
+                        print("✅ Using internal Render database URL for better connectivity")
+                    else:
+                        print("⚠️  Could not parse database path, using original URL")
+                else:
+                    print("✅ Already using internal Render URL format")
+        
         # Show URL format (without sensitive data) for debugging
-        url_parts = DATABASE_URL.split('@')
+        url_parts = internal_database_url.split('@')
         if len(url_parts) > 1:
             host_part = url_parts[1]  # Everything after @
             print(f"Database URL host part: {host_part}")
         
-        db_config = dj_database_url.parse(DATABASE_URL)
+        db_config = dj_database_url.parse(internal_database_url)
         print(f"Parsed database config - Engine: {db_config.get('ENGINE', 'Unknown')}")
         print(f"Host: {db_config.get('HOST', 'Not set')}")
         print(f"Port: {db_config.get('PORT', 'Not set')} (will default to 5432 if missing)")
