@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Hackversity{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div style="max-width: 600px; background: rgba(12, 12, 12, 0.8); border-radius: 24px; padding: 3rem; border: 1px solid rgba(220, 38, 38, 0.3); backdrop-filter: blur(20px);">
+        <h1 class="hero-title" style="font-size: 2.5rem; margin-bottom: 2rem;">User Profile</h1>
+        
+        <div style="color: #d1d5db; line-height: 1.8;">
+            <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(220, 38, 38, 0.1); border-radius: 12px; border: 1px solid rgba(220, 38, 38, 0.2);">
+                <strong style="color: #dc2626;">Username:</strong> {{ user.username }}
+            </div>
+            
+            {% if user.email %}
+            <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(220, 38, 38, 0.1); border-radius: 12px; border: 1px solid rgba(220, 38, 38, 0.2);">
+                <strong style="color: #dc2626;">Email:</strong> {{ user.email }}
+            </div>
+            {% endif %}
+            
+            {% if user.first_name or user.last_name %}
+            <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(220, 38, 38, 0.1); border-radius: 12px; border: 1px solid rgba(220, 38, 38, 0.2);">
+                <strong style="color: #dc2626;">Name:</strong> {{ user.get_full_name }}
+            </div>
+            {% endif %}
+            
+            <div style="margin-bottom: 2rem; padding: 1rem; background: rgba(220, 38, 38, 0.1); border-radius: 12px; border: 1px solid rgba(220, 38, 38, 0.2);">
+                <strong style="color: #dc2626;">Member Since:</strong> {{ user.date_joined|date:"F j, Y" }}
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="{% url 'chat:home' %}" class="btn-primary">Back to Chat</a>
+            <a href="{% url 'logout' %}" class="btn-secondary">Logout</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
