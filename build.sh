@@ -8,6 +8,24 @@ echo "🔨 Starting build process..."
 echo "📦 Installing Python dependencies..."
 pip install -r requirements.txt
 
+# Verify template files exist
+echo "🔍 Verifying critical template files..."
+if [ -f "templates/registration/login.html" ]; then
+    echo "✅ Login template found at templates/registration/login.html"
+else
+    echo "⚠️  Login template missing at templates/registration/login.html"
+fi
+
+if [ -f "templates/accounts/login.html" ]; then
+    echo "✅ Fallback login template found at templates/accounts/login.html"
+else
+    echo "⚠️  Fallback login template missing at templates/accounts/login.html"
+fi
+
+# List template directory structure for debugging
+echo "📂 Template directory structure:"
+find templates -type f -name "*.html" | head -10
+
 # Collect static files (this doesn't require database)
 echo "📁 Collecting static files..."
 python manage.py collectstatic --no-input

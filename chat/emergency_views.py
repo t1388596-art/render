@@ -1,6 +1,8 @@
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth import authenticate, login
+from django.shortcuts import redirect
 import json
 import os
 
@@ -101,6 +103,7 @@ def simple_home(request):
         
         <div style="margin: 30px 0;">
             <a href="/accounts/login/" class="btn">Login</a>
+            <a href="/emergency-login/" class="btn" style="background: #ffc107; color: #000;">Emergency Login</a>
             <a href="/accounts/signup/" class="btn">Sign Up</a>
             <a href="/health/" class="btn" style="background: #28a745;">Health Check</a>
         </div>
@@ -123,6 +126,157 @@ def simple_home(request):
 </body>
 </html>'''
     return HttpResponse(html)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def emergency_login(request):
+    """Emergency login endpoint with inline template"""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        if username and password:
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('/chat/')
+            else:
+                error_message = "Invalid username or password"
+        else:
+            error_message = "Please enter both username and password"
+    else:
+        error_message = ""
+    
+    # Inline login template
+    html_content = f'''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Login - GenAI Chat</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .login-container {{
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }}
+        .login-header {{
+            text-align: center;
+            margin-bottom: 2rem;
+        }}
+        .login-header h1 {{
+            color: #333;
+            margin-bottom: 0.5rem;
+        }}
+        .form-group {{
+            margin-bottom: 1rem;
+        }}
+        label {{
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }}
+        input[type="text"], input[type="password"] {{
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }}
+        .btn-primary {{
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+        }}
+        .login-links {{
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e1e1e1;
+        }}
+        .login-links a {{
+            color: #667eea;
+            text-decoration: none;
+        }}
+        .error-messages {{
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }}
+        .emergency-notice {{
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }}
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="emergency-notice">
+            🚨 Emergency Login Mode<br>
+            <small>Template system unavailable</small>
+        </div>
+        
+        <div class="login-header">
+            <h1>Welcome Back</h1>
+            <p>Sign in to your GenAI Chat account</p>
+        </div>
+
+        {('<div class="error-messages"><p>' + error_message + '</p></div>') if error_message else ''}
+
+        <form method="post">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required>
+            </div>
+
+            <button type="submit" class="btn-primary">Sign In</button>
+        </form>
+
+        <div class="login-links">
+            <p><a href="/simple/">← Back to Home</a></p>
+            <p><small>Emergency login endpoint - for production troubleshooting</small></p>
+        </div>
+    </div>
+</body>
+</html>
+    '''
+    
+    return HttpResponse(html_content)
 
 
 @csrf_exempt
