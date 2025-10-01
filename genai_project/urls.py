@@ -39,7 +39,6 @@ urlpatterns = [
     path('accounts/login/', custom_login_view, name='login'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/', include('accounts.urls')),  # For signup and profile
-    path('auth/', include('accounts.urls', namespace='auth')),  # Backward compatibility with namespace
     
     # Main application
     path('chat/', include('chat.urls')),
