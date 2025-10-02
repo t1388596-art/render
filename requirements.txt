@@ -16,6 +16,9 @@ django-allauth==0.63.6
 # HTTP requests for external API calls (Euron API)
 requests==2.31.0
 
+# Image processing for user avatars
+Pillow==10.4.0
+
 # Core dependencies (automatically installed with Django)
 asgiref==3.9.2
 sqlparse==0.5.2

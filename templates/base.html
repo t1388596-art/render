@@ -25,7 +25,17 @@
                     <li><a href="/chat/">Home</a></li>
                     <li><a href="/chat/?force_chat=1">Chat</a></li>
                     <li><a href="/accounts/profile/">Profile</a></li>
-                    <li><a href="/accounts/logout/">Logout ({{ user.get_full_name|default:user.username }})</a></li>
+                    <li class="user-avatar-container">
+                        <div class="user-avatar">
+                            {% if user.get_avatar_url %}
+                                <img src="{{ user.get_avatar_url }}" alt="{{ user.get_full_name|default:user.username }}" class="avatar-image">
+                            {% else %}
+                                <div class="avatar-initials">{{ user.get_initials }}</div>
+                            {% endif %}
+                        </div>
+                        <span class="username-text">{{ user.get_full_name|default:user.username }}</span>
+                    </li>
+                    <li><a href="/accounts/logout/">Logout</a></li>
                 {% else %}
                     <li><a href="/chat/">Home</a></li>
                     <li><a href="#features">Features</a></li>
