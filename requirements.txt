@@ -1,5 +1,5 @@
 # ==========================================
-# Django GenAI Application - DEVELOPMENT Requirements
+# Django GenAI Application - PRODUCTION Requirements
 # Python 3.13.5 compatible
 # ==========================================
 
@@ -18,3 +18,19 @@ requests==2.31.0
 
 # Image processing for user avatars
 Pillow==10.4.0
+
+# ==========================================
+# Production Dependencies
+# ==========================================
+
+# Database URL parsing for production
+dj-database-url==2.2.0
+
+# PostgreSQL adapter for production databases
+psycopg2-binary==2.9.10
+
+# Production WSGI server
+gunicorn==23.0.0
+
+# Static file serving for production
+whitenoise==6.11.0

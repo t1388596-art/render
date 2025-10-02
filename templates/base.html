@@ -2,13 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#DD0303">
     <title>{% block title %}Hackversity - Digital Fortress{% endblock %}</title>
     {% load static %}
     <meta name="csrf-token" content="{{ csrf_token }}">
+    
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Main Stylesheet -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
 </head>
 <body>
     <nav class="nav">
@@ -200,6 +216,10 @@
             });
         });
     </script>
+    
+    <!-- Responsive Enhancements -->
+    <script src="{% static 'js/responsive.js' %}"></script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

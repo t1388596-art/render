@@ -12,11 +12,17 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
-import dj_database_url
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Import production dependencies with fallback for development
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
+    print("⚠️  dj_database_url not installed - using SQLite for development")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -54,14 +60,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'django.contrib.sites',  # Removed to avoid database dependency issues
+    'django.contrib.sites',  # Required for allauth
     
-    # Third party apps (optional)
+    # Third party apps
     'rest_framework',
-    # 'corsheaders',  # Commented out for minimal setup
-    # 'allauth',
-    # 'allauth.account',
-    # 'allauth.socialaccount',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
     
     # Local apps
     'accounts',
@@ -75,6 +80,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # Required for allauth
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -143,7 +149,7 @@ def test_database_connection(db_config):
         return False
     return True
 
-if DATABASE_URL:
+if DATABASE_URL and dj_database_url:
     try:
         # Production database (PostgreSQL)
         print(f"Parsing DATABASE_URL...")
@@ -230,6 +236,17 @@ if DATABASE_URL:
                 'NAME': BASE_DIR / 'db.sqlite3',
             }
         }
+elif DATABASE_URL and not dj_database_url:
+    # DATABASE_URL is set but dj_database_url is not available
+    print("❌ DATABASE_URL is set but dj_database_url package is not installed")
+    print("⚠️  Install production requirements: pip install dj-database-url")
+    print("⚠️  Falling back to SQLite database")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 else:
     # Development database (SQLite)
     print("📝 DATABASE_URL not set, using SQLite for development")
@@ -313,7 +330,7 @@ REST_FRAMEWORK = {
 }
 
 # Django Authentication Configuration
-# SITE_ID = 1  # Removed since we're not using django.contrib.sites
+SITE_ID = 1  # Required for django-allauth
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
