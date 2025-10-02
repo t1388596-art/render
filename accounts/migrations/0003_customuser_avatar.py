@@ -7,6 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("accounts", "0002_alter_customuser_date_joined"),
+    ]
 
     operations = [
         migrations.AddField(
